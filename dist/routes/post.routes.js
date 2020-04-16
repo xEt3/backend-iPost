@@ -21,7 +21,6 @@ const postRoutes = express_1.Router();
 //Obtener post
 postRoutes.get('/', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
     try {
-        console.log(req.host);
         let pagina = Number(req.query.pagina - 1) || 0;
         let saltar = pagina * 10;
         const posts = yield post_model_1.Post.find().limit(10).skip(saltar).sort({ _id: -1 }).populate('usuario', '-password').exec();
@@ -92,5 +91,41 @@ postRoutes.get('/imagen/:userid/:img', (req, res, next) => {
     }
     const pathImg = fileSystem.getImgUrl(userID, img);
     return res.sendFile(pathImg);
+});
+// Poner like en post
+postRoutes.post('/like/:postid', [autenticacion_1.verificaToken], (req, res, next) => {
+    const idUsuario = req.usuario._id;
+    const postID = req.params.postid;
+    post_model_1.Post.findById(postID).exec().then((post) => __awaiter(this, void 0, void 0, function* () {
+        if (post) {
+            let existeLike = false;
+            post.likes.forEach(like => {
+                if (like._id == idUsuario) {
+                    existeLike = true;
+                }
+            });
+            if (existeLike) {
+                post.likes.splice(post.likes.indexOf(idUsuario), 1);
+            }
+            else {
+                post.likes.push(idUsuario);
+            }
+            post_model_1.Post.findByIdAndUpdate(postID, post, { new: true }, (err, postDB) => __awaiter(this, void 0, void 0, function* () {
+                if (postDB) {
+                    yield postDB.populate('usuario', '-password').execPopulate();
+                    return res.json({
+                        ok: true,
+                        postDB
+                    });
+                }
+            }));
+        }
+        else {
+            return res.json({
+                ok: false,
+                error: 'Id post incorrecta'
+            });
+        }
+    }));
 });
 exports.default = postRoutes;

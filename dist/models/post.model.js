@@ -18,7 +18,12 @@ const postSchema = new mongoose_1.Schema({
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'Usuario',
         required: [true, 'Debe existir una referencia a un usuario']
-    }
+    }, likes: [{
+            postedBy: {
+                type: mongoose_1.Schema.Types.ObjectId,
+                ref: 'Usuario'
+            }
+        }]
 });
 postSchema.pre('save', function (next) {
     this.created = new Date();

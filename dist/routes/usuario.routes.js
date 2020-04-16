@@ -38,7 +38,7 @@ userRoutes.post('/create', (req, res) => {
 //Login
 userRoutes.post('/login', (req, res) => {
     const body = req.body;
-    console.log(req.host, body);
+    console.log(body);
     usuario_model_1.Usuario.findOne({ email: body.email }, (err, userDB) => {
         if (err) {
             throw err;

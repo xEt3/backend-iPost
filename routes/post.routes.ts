@@ -1,6 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import { verificaToken } from '../middlewares/autenticacion';
-import { Post } from '../models/post.model';
+import { Post, IPost } from '../models/post.model';
 import { FileUpload } from '../interfaces/file-upload';
 import FileSystem from '../classes/file-system';
 import { Usuario } from '../models/usuario.model';
@@ -96,6 +96,41 @@ postRoutes.get('/imagen/:userid/:img', (req: any, res: Response, next: NextFunct
     return res.sendFile(pathImg)
 
 });
+
+// Poner like en post
+postRoutes.post('/like/:postid', [verificaToken], (req: any, res: Response, next: NextFunction) => {
+    const idUsuario = req.usuario._id
+    const postID = req.params.postid
+    Post.findById(postID).exec().then(async (post) => {
+        if (post) {
+            let existeLike = false;
+            post.likes.forEach(like=>{
+                if(like._id==idUsuario){
+                    existeLike=true;
+                }
+            })
+            if (existeLike) {
+                post.likes.splice(post.likes.indexOf(idUsuario), 1);
+            } else {
+                post.likes.push(idUsuario);
+            }
+            Post.findByIdAndUpdate(postID, post, { new: true },async (err, postDB) => {
+                if (postDB) {
+                    await postDB.populate('usuario', '-password').execPopulate()
+                    return res.json({
+                        ok: true,
+                        postDB
+                    })
+                }
+            })
+        } else {
+            return res.json({
+                ok: false,
+                error: 'Id post incorrecta'
+            })
+        }
+    })
+})
 
 export default postRoutes;
 
