@@ -83,6 +83,7 @@ Base de datos: mongodb://localhost:27017/fotosgram
     $.http.post(`${url}/user/create`, usuario)
   ```
 <hr/>
+
 **Login**
 ----
 
@@ -124,6 +125,7 @@ valid user and returns json data with user token.
     $.http.post(`${url}/user/login`, { email, password })
   ```
 <hr/>
+
 **Follow/Unfollow User**
 ----
   Follow the user if you don't follow it yet or unfollow it if you already follow it
@@ -177,7 +179,7 @@ valid user and returns json data with user token.
   ```
 <hr/>
 
-  **Update User**
+**Update User**
 ----
   Update user with new values.
 
