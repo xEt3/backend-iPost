@@ -108,10 +108,10 @@ postRoutes.delete('/:idPost', [autenticacion_1.verificaToken], (req, res, next) 
         });
     }
 }));
-//Actualizar post
-postRoutes.post('/update/:idPost', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-    //TO-DO Por inmplementar
-}));
+// //Actualizar post
+// postRoutes.post('/update/:idPost', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
+//     //TO-DO Por inmplementar
+// });
 //Subir fichero
 postRoutes.post('/upload', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
     if (!req.files) {
@@ -195,5 +195,48 @@ postRoutes.post('/like/:idPost', [autenticacion_1.verificaToken], (req, res, nex
             error: 'Id post incorrecta'
         });
     }
+}));
+//Add comentario
+postRoutes.post('/comment/:idPost', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    const idPost = req.params.idPost;
+    const idUsuario = req.usuario._id;
+    const post = yield post_model_1.Post.findById(idPost).exec();
+    const text = req.body.text;
+    if (!post) {
+        return res.json({
+            ok: false,
+            message: 'no se encontro el post'
+        });
+    }
+    if (!text) {
+        return res.json({
+            ok: false,
+            message: 'Texto comentario vacio'
+        });
+    }
+    post.comments.push({
+        text,
+        postedBy: idUsuario
+    });
+    console.log(idUsuario);
+    post_model_1.Post.findByIdAndUpdate(idPost, post).exec().then(postDesactualizado => {
+        if (postDesactualizado) {
+            return res.json({
+                ok: true,
+                post
+            });
+        }
+        else {
+            return res.json({
+                ok: false,
+                message: 'no se encontro el post'
+            });
+        }
+    }).catch((err) => {
+        return res.json({
+            ok: false,
+            err
+        });
+    });
 }));
 exports.default = postRoutes;

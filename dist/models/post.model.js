@@ -19,6 +19,12 @@ const postSchema = new mongoose_1.Schema({
         ref: 'Usuario',
         required: [true, 'Debe existir una referencia a un usuario']
     }, likes: [{
+            likedBy: {
+                type: mongoose_1.Schema.Types.ObjectId,
+                ref: 'Usuario'
+            }
+        }], comments: [{
+            text: String,
             postedBy: {
                 type: mongoose_1.Schema.Types.ObjectId,
                 ref: 'Usuario'

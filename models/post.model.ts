@@ -17,12 +17,19 @@ const postSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Usuario',
         required: [true, 'Debe existir una referencia a un usuario']
-    },likes: [{
+    }, likes: [{
+        likedBy: {
+            type: Schema.Types.ObjectId,
+            ref: 'Usuario'
+        }
+    }], comments: [{
+        text: String,
         postedBy: {
             type: Schema.Types.ObjectId,
             ref: 'Usuario'
         }
     }]
+
 });
 
 postSchema.pre<IPost>('save', function (next) {
@@ -30,13 +37,14 @@ postSchema.pre<IPost>('save', function (next) {
     next();
 });
 
-export interface IPost extends Document{
-    created:Date,
-    mensaje:string,
-    imgs:string[],
-    coords:string,
-    usuario:string
-    likes:any[]
+export interface IPost extends Document {
+    created: Date,
+    mensaje: string,
+    imgs: string[],
+    coords: string,
+    usuario: string,
+    likes: any[],
+    comments:any[]
 }
 
 export const Post = model<IPost>('Post', postSchema)

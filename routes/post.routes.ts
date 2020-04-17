@@ -4,6 +4,7 @@ import { Post, IPost } from '../models/post.model';
 import { FileUpload } from '../interfaces/file-upload';
 import FileSystem from '../classes/file-system';
 import { Usuario } from '../models/usuario.model';
+import { text } from 'body-parser';
 
 const fileSystem = new FileSystem();
 const postRoutes = Router();
@@ -98,10 +99,10 @@ postRoutes.delete('/:idPost', [verificaToken], async (req: any, res: Response, n
     }
 });
 
-//Actualizar post
-postRoutes.post('/update/:idPost', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
-    //TO-DO Por inmplementar
-});
+// //Actualizar post
+// postRoutes.post('/update/:idPost', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
+//     //TO-DO Por inmplementar
+// });
 
 
 //Subir fichero
@@ -187,7 +188,51 @@ postRoutes.post('/like/:idPost', [verificaToken], async (req: any, res: Response
             error: 'Id post incorrecta'
         })
     }
+});
+
+//Add comentario
+postRoutes.post('/comment/:idPost', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
+    const idPost = req.params.idPost;
+    const idUsuario = req.usuario._id
+    const post = await Post.findById(idPost).exec();
+    const text = req.body.text;
+    if (!post) {
+        return res.json({
+            ok: false,
+            message: 'no se encontro el post'
+        })
+    }
+    if (!text) {
+        return res.json({
+            ok: false,
+            message: 'Texto comentario vacio'
+        })
+    }
+    post.comments.push({
+        text,
+        postedBy: idUsuario
+    })
+    console.log(idUsuario)
+    Post.findByIdAndUpdate(idPost, post).exec().then(postDesactualizado => {
+        if (postDesactualizado) {
+            return res.json({
+                ok: true,
+                post
+            })
+        } else {
+            return res.json({
+                ok: false,
+                message: 'no se encontro el post'
+            })
+        }
+    }).catch((err) => {
+        return res.json({
+            ok: false,
+            err
+        })
+    })
 })
+
 
 export default postRoutes;
 
