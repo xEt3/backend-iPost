@@ -23,7 +23,7 @@ postRoutes.get('/', (req, res, next) => __awaiter(this, void 0, void 0, function
     try {
         let pagina = Number(req.query.pagina - 1) || 0;
         let saltar = pagina * 10;
-        const posts = yield post_model_1.Post.find().limit(10).skip(saltar).sort({ _id: -1 }).populate('usuario', '-password').exec();
+        const posts = yield post_model_1.Post.find().limit(10).skip(saltar).sort({ _id: -1 }).populate('usuario', '-password').populate('comments.postedBy', '-password').populate('likes.likedBy', '-password').exec();
         res.json({
             ok: true,
             posts
@@ -39,7 +39,7 @@ postRoutes.get('/', (req, res, next) => __awaiter(this, void 0, void 0, function
 //Obtener Post
 postRoutes.get('/:idPost', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
     const idPost = req.params.idPost;
-    const post = yield post_model_1.Post.findById(idPost).populate('usuario', '-password').exec();
+    const post = yield post_model_1.Post.findById(idPost).populate('usuario', '-password').populate('comments.postedBy', '-password').populate('likes.likedBy', '-password').exec();
     if (post) {
         return res.json({
             ok: true,
@@ -244,7 +244,7 @@ postRoutes.post('/like/:idPost', [autenticacion_1.verificaToken], (req, res, nex
     if (post) {
         let existeLike = false;
         post.likes.forEach(like => {
-            if (like._id == idUsuario) {
+            if (like.likedBy == idUsuario) {
                 existeLike = true;
             }
         });
@@ -252,7 +252,7 @@ postRoutes.post('/like/:idPost', [autenticacion_1.verificaToken], (req, res, nex
             post.likes.splice(post.likes.indexOf(idUsuario), 1);
         }
         else {
-            post.likes.push(idUsuario);
+            post.likes.push({ likedBy: idUsuario });
         }
         post_model_1.Post.findByIdAndUpdate(idPost, post, { new: true }, (err, postDB) => __awaiter(this, void 0, void 0, function* () {
             if (postDB) {
