@@ -1,0 +1,1 @@
+Moved to [Platforms](https://github.com/wekan/wekan/wiki/Platforms)
