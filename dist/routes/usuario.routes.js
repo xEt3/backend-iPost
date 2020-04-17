@@ -37,7 +37,7 @@ userRoutes.post('/create', (req, res) => {
             token: userToken
         });
     }).catch(error => {
-        res.json({
+        res.status(400).json({
             ok: false,
             err: error
         });
@@ -49,13 +49,13 @@ userRoutes.post('/login', (req, res) => {
     console.log(body);
     usuario_model_1.Usuario.findOne({ email: body.email }, (err, userDB) => {
         if (err) {
-            return res.json({
+            return res.status(404).json({
                 ok: false,
                 err
             });
         }
         if (!userDB) {
-            return res.json({
+            return res.status(400).json({
                 ok: false,
                 mensaje: 'Usuario/contraseña incorrectos'
             });
@@ -73,10 +73,7 @@ userRoutes.post('/login', (req, res) => {
             });
         }
         else {
-            return res.json({
-                ok: false,
-                mensaje: 'Usuario/contraseña incorrectos***'
-            });
+            return res.json({});
         }
     });
 });
@@ -85,7 +82,7 @@ userRoutes.post('/follow/:idUser', [autenticacion_1.verificaToken], (req, res) =
     const usuarioToFollow = yield usuario_model_1.Usuario.findById(req.params.idUser).exec();
     const usuario = yield usuario_model_1.Usuario.findById(req.usuario._id).exec();
     if (!usuarioToFollow || !usuario) {
-        return res.json({
+        return res.status(404).json({
             ok: false,
             message: 'No existe el usuario al que quieres seguir'
         });
@@ -115,7 +112,7 @@ userRoutes.post('/follow/:idUser', [autenticacion_1.verificaToken], (req, res) =
             usuarioToFollow
         });
     }).catch(err => {
-        res.json({
+        res.status(400).json({
             ok: false,
             err
         });
@@ -130,14 +127,14 @@ userRoutes.post('/update', autenticacion_1.verificaToken, (req, res) => {
     };
     usuario_model_1.Usuario.findByIdAndUpdate(req.usuario._id, user, { new: true }, (err, userDB) => {
         if (err) {
-            return res.json({
+            return res.status(400).json({
                 ok: false,
                 err
             });
         }
         ;
         if (!userDB) {
-            return res.json({
+            return res.status(404).json({
                 ok: false,
                 mensaje: 'No existe un usuario con ese id'
             });

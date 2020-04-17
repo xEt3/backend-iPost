@@ -8,7 +8,7 @@ exports.verificaToken = (req, res, next) => {
         req.usuario = decode.usuario;
         next();
     }).catch(err => {
-        res.json({
+        res.status(401).json({
             ok: false,
             mensaje: 'Error en la verificacion del token'
         });
