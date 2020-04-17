@@ -22,6 +22,28 @@ const usuarioSchema = new mongoose_1.Schema({
     password: {
         type: String,
         required: [true, 'La contraseña es necesaria']
+    },
+    followers: [{
+            usuario: {
+                type: mongoose_1.Schema.Types.ObjectId,
+                ref: 'Usuario',
+                unique: true
+            }
+        }],
+    following: [{
+            usuario: {
+                type: mongoose_1.Schema.Types.ObjectId,
+                ref: 'Usuario',
+                unique: true
+            }
+        }],
+    admin: {
+        type: Boolean,
+        default: false
+    },
+    verified: {
+        type: Boolean,
+        default: false
     }
 });
 usuarioSchema.method('compararPassword', function (password = '') {

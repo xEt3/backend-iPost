@@ -19,6 +19,28 @@ const usuarioSchema = new Schema({
     password: {
         type: String,
         required: [true, 'La contraseña es necesaria']
+    },
+    followers:[{
+        usuario: {
+            type: Schema.Types.ObjectId,
+            ref: 'Usuario',
+            unique:true
+        }
+    }],
+    following:[{
+        usuario: {
+            type: Schema.Types.ObjectId,
+            ref: 'Usuario',
+            unique: true
+        }
+    }],
+    admin:{
+        type: Boolean,
+        default:false
+    },
+    verified:{
+        type: Boolean,
+        default:false
     }
 });
 
@@ -26,11 +48,15 @@ usuarioSchema.method('compararPassword', function (password: string = ''): boole
     return bcrypt.compareSync(password, this.password);
 });
 
-interface Iusuario extends Document {
+export interface Iusuario extends Document {
     nombre: string,
     email: string,
     password: string,
     avatar: string,
+    followers:Iusuario[],
+    following:Iusuario[],
+    admin:boolean,
+    verified:boolean,
     compararPassword(password:string):boolean
 }
 
