@@ -239,4 +239,53 @@ postRoutes.post('/comment/:idPost', [autenticacion_1.verificaToken], (req, res, 
         });
     });
 }));
+//Add comentario
+postRoutes.delete('/:idPost/:idComment', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    const idPost = req.params.idPost;
+    const idUsuario = req.usuario._id;
+    const idComment = req.params.idComment;
+    const post = yield post_model_1.Post.findById(idPost).exec();
+    if (!post) {
+        return res.json({
+            ok: false,
+            message: 'no se encontro el post'
+        });
+    }
+    const comment = post.comments.find(commentario => commentario._id == idComment);
+    if (!comment) {
+        return res.json({
+            ok: false,
+            message: 'no se encontro el id del comentario en este post',
+            post
+        });
+    }
+    if (comment.postedBy != idUsuario) {
+        return res.json({
+            ok: false,
+            message: 'no puedes borrar este comentario',
+        });
+    }
+    else {
+        post.comments.splice(post.comments.indexOf(comment), 1);
+        post_model_1.Post.findByIdAndUpdate(idPost, post).exec().then(postDesactualizado => {
+            if (postDesactualizado) {
+                return res.json({
+                    ok: true,
+                    post
+                });
+            }
+            else {
+                return res.json({
+                    ok: false,
+                    message: 'no se encontro el post'
+                });
+            }
+        }).catch((err) => {
+            return res.json({
+                ok: false,
+                err
+            });
+        });
+    }
+}));
 exports.default = postRoutes;

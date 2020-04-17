@@ -233,6 +233,54 @@ postRoutes.post('/comment/:idPost', [verificaToken], async (req: any, res: Respo
     })
 })
 
+//Add comentario
+postRoutes.delete('/:idPost/:idComment', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
+    const idPost = req.params.idPost;
+    const idUsuario = req.usuario._id
+    const idComment = req.params.idComment;
+    const post = await Post.findById(idPost).exec();
+    if (!post) {
+        return res.json({
+            ok: false,
+            message: 'no se encontro el post'
+        })
+    }
+    const comment = post.comments.find(commentario=>commentario._id==idComment);
+    if(!comment){
+        return res.json({
+            ok: false,
+            message: 'no se encontro el id del comentario en este post',
+            post
+        })
+    }
+    if(comment.postedBy!=idUsuario){
+        return res.json({
+            ok: false,
+            message: 'no puedes borrar este comentario',
+        })
+    }else{
+        post.comments.splice(post.comments.indexOf(comment),1);
+        Post.findByIdAndUpdate(idPost, post).exec().then(postDesactualizado => {
+            if (postDesactualizado) {
+                return res.json({
+                    ok: true,
+                    post
+                })
+            } else {
+                return res.json({
+                    ok: false,
+                    message: 'no se encontro el post'
+                })
+            }
+        }).catch((err) => {
+            return res.json({
+                ok: false,
+                err
+            })
+        })
+    }
+})
+
 
 export default postRoutes;
 
