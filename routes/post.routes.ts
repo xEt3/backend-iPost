@@ -233,7 +233,7 @@ postRoutes.post('/comment/:idPost', [verificaToken], async (req: any, res: Respo
     })
 })
 
-//Add comentario
+//delete comentario
 postRoutes.delete('/:idPost/:idComment', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
     const idPost = req.params.idPost;
     const idUsuario = req.usuario._id

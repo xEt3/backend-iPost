@@ -239,7 +239,7 @@ postRoutes.post('/comment/:idPost', [autenticacion_1.verificaToken], (req, res, 
         });
     });
 }));
-//Add comentario
+//delete comentario
 postRoutes.delete('/:idPost/:idComment', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
     const idPost = req.params.idPost;
     const idUsuario = req.usuario._id;
