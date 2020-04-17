@@ -22,7 +22,9 @@ const usuarioSchema = new mongoose_1.Schema({
     password: {
         type: String,
         required: [true, 'La contraseña es necesaria']
-    },
+    }, imgsTemp: [{
+            type: String
+        }],
     followers: [{
             usuario: {
                 type: mongoose_1.Schema.Types.ObjectId,
