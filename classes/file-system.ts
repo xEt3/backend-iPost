@@ -30,15 +30,50 @@ export default class FileSystem {
 
     }
 
+    eliminarImagenesPost(idUsuario:string,imgs:string[]){
+        imgs.forEach(img=>{
+            const pathFile = path.resolve(__dirname, `../uploads/${idUsuario}/post`, img);
+            this.eliminarFichero(pathFile);
+        })
+    }
+
+    eliminarFicheroTemp(idUsuario: string, nombreFichero: string) {
+        const pathFile = path.resolve(__dirname, `../uploads/${idUsuario}/temp`, nombreFichero);
+        return this.eliminarCarpeta(pathFile);
+    }
+
+    eliminarCarpetaTemp(idUsuario: string) {
+        const pathFile = path.resolve(__dirname, `../uploads/${idUsuario}/temp`);
+        return this.eliminarFichero(pathFile);
+    }
+
+    private eliminarFichero(path: string): boolean {
+        if (fs.existsSync(path)) {
+            fs.rmdirSync(path, { recursive: true });
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private eliminarCarpeta(path:string):boolean{
+        if (fs.existsSync(path)) {
+            fs.unlinkSync(path);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     guardarImagenTemporal(file: FileUpload, userID: string) {
-        return new Promise((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
             const pathTmp = this.crearCarpetaUsuario(userID);
             const nombreArchivo = this.generarNombreArchivo(file.name);
             file.mv(`${pathTmp}/${nombreArchivo}`, (err: any) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve();
+                    resolve(nombreArchivo);
                 }
             })
         })
@@ -47,10 +82,12 @@ export default class FileSystem {
     private crearCarpetaUsuario(userID: string) {
         const pathUser = path.resolve(__dirname, '../uploads', userID);
         const pathUserTemporal = pathUser + '/temp';
-        const existe = fs.existsSync(pathUser);
-
-        if (!existe) {
+        const existeCarpetaUser = fs.existsSync(pathUser);
+        const existeCarpetaTemporal = fs.existsSync(pathUserTemporal);
+        if (!existeCarpetaUser) {
             fs.mkdirSync(pathUser);
+        }
+        if (!existeCarpetaTemporal) {
             fs.mkdirSync(pathUserTemporal);
         }
         return pathUserTemporal;
@@ -63,12 +100,12 @@ export default class FileSystem {
         return `${idUnico}.${extension}`
     }
 
-    getImgUrl(userId:string, img:string) {
+    getImgUrl(userId: string, img: string) {
         const pathFoto = path.resolve(__dirname, '../uploads', userId, 'post', img);
         if (fs.existsSync(pathFoto)) {
             return pathFoto;
-        }else{
-            return path.resolve(__dirname,'../assets/defaultImagen.jpg');
+        } else {
+            return path.resolve(__dirname, '../assets/defaultImagen.jpg');
         }
     }
 }

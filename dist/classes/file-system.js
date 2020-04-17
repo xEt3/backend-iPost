@@ -27,6 +27,38 @@ class FileSystem {
         const pathTmp = path_1.default.resolve(__dirname, '../uploads', userID, 'temp');
         return fs_1.default.readdirSync(pathTmp) || [];
     }
+    eliminarImagenesPost(idUsuario, imgs) {
+        imgs.forEach(img => {
+            const pathFile = path_1.default.resolve(__dirname, `../uploads/${idUsuario}/post`, img);
+            this.eliminarFichero(pathFile);
+        });
+    }
+    eliminarFicheroTemp(idUsuario, nombreFichero) {
+        const pathFile = path_1.default.resolve(__dirname, `../uploads/${idUsuario}/temp`, nombreFichero);
+        return this.eliminarCarpeta(pathFile);
+    }
+    eliminarCarpetaTemp(idUsuario) {
+        const pathFile = path_1.default.resolve(__dirname, `../uploads/${idUsuario}/temp`);
+        return this.eliminarFichero(pathFile);
+    }
+    eliminarFichero(path) {
+        if (fs_1.default.existsSync(path)) {
+            fs_1.default.rmdirSync(path, { recursive: true });
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    eliminarCarpeta(path) {
+        if (fs_1.default.existsSync(path)) {
+            fs_1.default.unlinkSync(path);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
     guardarImagenTemporal(file, userID) {
         return new Promise((resolve, reject) => {
             const pathTmp = this.crearCarpetaUsuario(userID);
@@ -36,7 +68,7 @@ class FileSystem {
                     reject(err);
                 }
                 else {
-                    resolve();
+                    resolve(nombreArchivo);
                 }
             });
         });
@@ -44,9 +76,12 @@ class FileSystem {
     crearCarpetaUsuario(userID) {
         const pathUser = path_1.default.resolve(__dirname, '../uploads', userID);
         const pathUserTemporal = pathUser + '/temp';
-        const existe = fs_1.default.existsSync(pathUser);
-        if (!existe) {
+        const existeCarpetaUser = fs_1.default.existsSync(pathUser);
+        const existeCarpetaTemporal = fs_1.default.existsSync(pathUserTemporal);
+        if (!existeCarpetaUser) {
             fs_1.default.mkdirSync(pathUser);
+        }
+        if (!existeCarpetaTemporal) {
             fs_1.default.mkdirSync(pathUserTemporal);
         }
         return pathUserTemporal;
