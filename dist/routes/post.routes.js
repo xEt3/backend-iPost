@@ -81,6 +81,7 @@ postRoutes.delete('/:idPost', [autenticacion_1.verificaToken], (req, res, next) 
         if (post.usuario == req.usuario._id) {
             post_model_1.Post.findByIdAndDelete(idPost).exec().then(postBorrado => {
                 if (postBorrado) {
+                    fileSystem.eliminarImagenesPost(req.usuario._id, postBorrado.imgs);
                     return res.json({
                         ok: true,
                         post: postBorrado
@@ -134,18 +135,92 @@ postRoutes.post('/upload', [autenticacion_1.verificaToken], (req, res, next) => 
             mensaje: 'Lo que subio no es una imagen'
         });
     }
-    fileSystem.guardarImagenTemporal(file, req.usuario._id).then(() => {
+    fileSystem.guardarImagenTemporal(file, req.usuario._id).then((nombreImagen) => __awaiter(this, void 0, void 0, function* () {
+        const usr = yield usuario_model_1.Usuario.findById(req.usuario._id).exec();
+        if (!usr) {
+            return res.json({
+                ok: false,
+                message: 'No se obtubo el usuario'
+            });
+        }
+        usr.imgsTemp.push(nombreImagen);
+        yield usuario_model_1.Usuario.findByIdAndUpdate(usr._id, usr).exec();
         return res.json({
             ok: true,
-            file: file
+            nombreImagen: nombreImagen,
+            usr
         });
-    }).catch(err => {
+    })).catch(err => {
         return res.json({
             ok: false,
             message: 'Error al guardar la imagen',
             err
         });
     });
+}));
+//Eliminar fichero temporal
+postRoutes.delete('/imagen/temp/:nombreImagen', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    const nombreImagen = req.params.nombreImagen;
+    if (!nombreImagen) {
+        return res.json({
+            ok: false,
+            message: 'nombre inavalido d'
+        });
+    }
+    const usr = yield usuario_model_1.Usuario.findById(req.usuario._id).exec();
+    if (!usr) {
+        return res.json({
+            ok: false,
+            message: 'No se obtubo el usuario'
+        });
+    }
+    const index = usr.imgsTemp.indexOf(nombreImagen);
+    if (index < 0) {
+        return res.json({
+            ok: false,
+            message: 'El usuario no pose en su ese archivo array de archivos temporale',
+            usr
+        });
+    }
+    if (fileSystem.eliminarFicheroTemp(req.usuario._id, nombreImagen)) {
+        usr.imgsTemp.splice(index, 1);
+        yield usuario_model_1.Usuario.findByIdAndUpdate(usr._id, usr).exec();
+        res.json({
+            ok: true,
+            message: `${nombreImagen} eliminada`,
+            usr
+        });
+    }
+    else {
+        res.json({
+            ok: false,
+            message: 'nombre oo inavalido'
+        });
+    }
+}));
+//Eliminar carpeta temporal
+postRoutes.delete('/imagen/temp', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    const usr = yield usuario_model_1.Usuario.findById(req.usuario._id).exec();
+    if (!usr) {
+        return res.json({
+            ok: false,
+            message: 'No se obtubo el usuario'
+        });
+    }
+    usr.imgsTemp = [];
+    yield usuario_model_1.Usuario.findByIdAndUpdate(usr._id, usr);
+    if (fileSystem.eliminarCarpetaTemp(req.usuario._id)) {
+        res.json({
+            ok: true,
+            message: `Eliminada carpeta temp de ${req.usuario._id}`
+        });
+    }
+    else {
+        res.json({
+            ok: false,
+            message: 'No hay carpeta temp del usuario ' + req.usuario._id
+        });
+    }
 }));
 //Obtener imagen post
 postRoutes.get('/imagen/:userid/:img', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
@@ -240,7 +315,7 @@ postRoutes.post('/comment/:idPost', [autenticacion_1.verificaToken], (req, res, 
     });
 }));
 //delete comentario
-postRoutes.delete('/:idPost/:idComment', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+postRoutes.delete('/comment/:idPost/:idComment', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
     const idPost = req.params.idPost;
     const idUsuario = req.usuario._id;
     const idComment = req.params.idComment;
