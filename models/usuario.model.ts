@@ -19,28 +19,30 @@ const usuarioSchema = new Schema({
     password: {
         type: String,
         required: [true, 'La contraseña es necesaria']
-    },
-    followers:[{
-        usuario: {
-            type: Schema.Types.ObjectId,
-            ref: 'Usuario',
-            unique:true
-        }
+    },imgsTemp: [{
+        type: String
     }],
-    following:[{
+    followers: [{
         usuario: {
             type: Schema.Types.ObjectId,
             ref: 'Usuario',
             unique: true
         }
     }],
-    admin:{
+    following: [{
+        usuario: {
+            type: Schema.Types.ObjectId,
+            ref: 'Usuario',
+            unique: true
+        }
+    }],
+    admin: {
         type: Boolean,
-        default:false
+        default: false
     },
-    verified:{
+    verified: {
         type: Boolean,
-        default:false
+        default: false
     }
 });
 
@@ -53,11 +55,12 @@ export interface Iusuario extends Document {
     email: string,
     password: string,
     avatar: string,
-    followers:Iusuario[],
-    following:Iusuario[],
-    admin:boolean,
-    verified:boolean,
-    compararPassword(password:string):boolean
+    imgsTemp:string[],
+    followers: Iusuario[],
+    following: Iusuario[],
+    admin: boolean,
+    verified: boolean,
+    compararPassword(password: string): boolean
 }
 
 export const Usuario = model<Iusuario>('Usuario', usuarioSchema)
