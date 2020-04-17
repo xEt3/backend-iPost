@@ -5,6 +5,7 @@ import { FileUpload } from '../interfaces/file-upload';
 import FileSystem from '../classes/file-system';
 import { Usuario } from '../models/usuario.model';
 import { text } from 'body-parser';
+import userRoutes from './usuario.routes';
 
 const fileSystem = new FileSystem();
 const postRoutes = Router();
@@ -73,6 +74,7 @@ postRoutes.delete('/:idPost', [verificaToken], async (req: any, res: Response, n
         if (post.usuario == req.usuario._id) {
             Post.findByIdAndDelete(idPost).exec().then(postBorrado => {
                 if (postBorrado) {
+                    fileSystem.eliminarImagenesPost(req.usuario._id,postBorrado.imgs)
                     return res.json({
                         ok: true,
                         post: postBorrado
@@ -127,10 +129,20 @@ postRoutes.post('/upload', [verificaToken], async (req: any, res: Response, next
             mensaje: 'Lo que subio no es una imagen'
         });
     }
-    fileSystem.guardarImagenTemporal(file, req.usuario._id).then(() => {
+    fileSystem.guardarImagenTemporal(file, req.usuario._id).then(async (nombreImagen: string) => {
+        const usr = await Usuario.findById(req.usuario._id).exec();
+        if (!usr) {
+            return res.json({
+                ok: false,
+                message: 'No se obtubo el usuario'
+            })
+        }
+        usr.imgsTemp.push(nombreImagen);
+        await Usuario.findByIdAndUpdate(usr._id, usr).exec();
         return res.json({
             ok: true,
-            file: file
+            nombreImagen: nombreImagen,
+            usr
         })
     }).catch(err => {
         return res.json({
@@ -139,6 +151,70 @@ postRoutes.post('/upload', [verificaToken], async (req: any, res: Response, next
             err
         });
     });
+});
+
+//Eliminar fichero temporal
+postRoutes.delete('/imagen/temp/:nombreImagen', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
+    const nombreImagen = req.params.nombreImagen;
+    if (!nombreImagen) {
+        return res.json({
+            ok: false,
+            message: 'nombre inavalido d'
+        })
+    }
+    const usr = await Usuario.findById(req.usuario._id).exec();
+    if (!usr) {
+        return res.json({
+            ok: false,
+            message: 'No se obtubo el usuario'
+        })
+    }
+    const index = usr.imgsTemp.indexOf(nombreImagen);
+    if(index<0){
+        return res.json({
+            ok: false,
+            message: 'El usuario no pose en su ese archivo array de archivos temporale',
+            usr
+        })
+    }
+    if (fileSystem.eliminarFicheroTemp(req.usuario._id, nombreImagen)) {
+        usr.imgsTemp.splice(index,1);
+        await Usuario.findByIdAndUpdate(usr._id,usr).exec();
+        res.json({
+            ok: true,
+            message: `${nombreImagen} eliminada`,
+            usr
+        })
+    } else {
+        res.json({
+            ok: false,
+            message: 'nombre oo inavalido'
+        })
+    }
+});
+
+//Eliminar carpeta temporal
+postRoutes.delete('/imagen/temp', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
+    const usr = await Usuario.findById(req.usuario._id).exec();
+    if (!usr) {
+        return res.json({
+            ok: false,
+            message: 'No se obtubo el usuario'
+        })
+    }
+    usr.imgsTemp=[];
+    await Usuario.findByIdAndUpdate(usr._id,usr);
+    if (fileSystem.eliminarCarpetaTemp(req.usuario._id)) {
+        res.json({
+            ok: true,
+            message: `Eliminada carpeta temp de ${req.usuario._id}`
+        })
+    } else {
+        res.json({
+            ok: false,
+            message: 'No hay carpeta temp del usuario ' + req.usuario._id
+        })
+    }
 });
 
 //Obtener imagen post
@@ -234,7 +310,7 @@ postRoutes.post('/comment/:idPost', [verificaToken], async (req: any, res: Respo
 })
 
 //delete comentario
-postRoutes.delete('/:idPost/:idComment', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
+postRoutes.delete('/comment/:idPost/:idComment', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
     const idPost = req.params.idPost;
     const idUsuario = req.usuario._id
     const idComment = req.params.idComment;
@@ -245,21 +321,21 @@ postRoutes.delete('/:idPost/:idComment', [verificaToken], async (req: any, res: 
             message: 'no se encontro el post'
         })
     }
-    const comment = post.comments.find(commentario=>commentario._id==idComment);
-    if(!comment){
+    const comment = post.comments.find(commentario => commentario._id == idComment);
+    if (!comment) {
         return res.json({
             ok: false,
             message: 'no se encontro el id del comentario en este post',
             post
         })
     }
-    if(comment.postedBy!=idUsuario){
+    if (comment.postedBy != idUsuario) {
         return res.json({
             ok: false,
             message: 'no puedes borrar este comentario',
         })
-    }else{
-        post.comments.splice(post.comments.indexOf(comment),1);
+    } else {
+        post.comments.splice(post.comments.indexOf(comment), 1);
         Post.findByIdAndUpdate(idPost, post).exec().then(postDesactualizado => {
             if (postDesactualizado) {
                 return res.json({
