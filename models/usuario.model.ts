@@ -19,21 +19,19 @@ const usuarioSchema = new Schema({
     password: {
         type: String,
         required: [true, 'La contraseña es necesaria']
-    },imgsTemp: [{
+    }, imgsTemp: [{
         type: String
     }],
     followers: [{
         usuario: {
             type: Schema.Types.ObjectId,
             ref: 'Usuario',
-            unique: true
         }
     }],
     following: [{
         usuario: {
             type: Schema.Types.ObjectId,
             ref: 'Usuario',
-            unique: true
         }
     }],
     admin: {
@@ -55,9 +53,9 @@ export interface Iusuario extends Document {
     email: string,
     password: string,
     avatar: string,
-    imgsTemp:string[],
-    followers: Iusuario[],
-    following: Iusuario[],
+    imgsTemp: string[],
+    followers: any[],
+    following: any[],
     admin: boolean,
     verified: boolean,
     compararPassword(password: string): boolean
