@@ -4,7 +4,7 @@ import { Token } from '../classes/token';
 export const verificaToken = (req: any, res: Response, next: NextFunction) => {
     const token = req.get('x-token');
     Token.comprobarToken(token).then((decode: any) => {
-        console.log('Verificacion Token',decode)
+        // console.log('Verificacion Token',decode)
         req.usuario = decode.usuario
         next();
     }).catch(err => {
