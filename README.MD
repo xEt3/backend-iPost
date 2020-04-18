@@ -281,3 +281,7 @@ valid user and returns json data with user token.
   ```javascript
     $.http.get(`${url}/user`,null,{'x-token': token};
   ```
+
+# Posts
+
+
