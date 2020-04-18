@@ -1,0 +1,10 @@
+node_modules
+dist
+dist/index.js
+dist/middlewares/autenticacion.js
+dist/models/usuario.model.js
+dist/routes/usuario.routes.js
+dist/uploads/5e92410d4c3f4a5c6047badf/temp/djahmk94c0eck.png
+dist/uploads/5e92410d4c3f4a5c6047badf/temp/djal4k94c7z9t.png
+dist/uploads/5e92410d4c3f4a5c6047badf/temp/djjrxk94h49hb.png
+dist/uploads/5e99ee4f44ced568ef8a6622/temp/djkq7k94hznq8.png
