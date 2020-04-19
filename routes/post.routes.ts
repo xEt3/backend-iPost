@@ -15,7 +15,7 @@ postRoutes.get('/', async (req: any, res: Response, next: NextFunction) => {
     try {
         let pagina = Number(req.query.pagina - 1) || 0;
         let saltar = pagina * 10;
-        const posts = await Post.find().limit(10).skip(saltar).sort({ _id: -1 }).populate('usuario', '-password').populate('comments.postedBy','-password').populate('likes.likedBy','-password').exec();
+        const posts = await Post.find().limit(10).skip(saltar).sort({ _id: -1 }).populate('usuario', '-password').populate('comments.postedBy', '-password').populate('likes.likedBy', '-password').exec();
         res.json({
             ok: true,
             posts
@@ -29,9 +29,15 @@ postRoutes.get('/', async (req: any, res: Response, next: NextFunction) => {
 })
 
 //Obtener Post
-postRoutes.get('/:idPost', async (req: any, res: Response, next: NextFunction) => {
+postRoutes.get('/get/:idPost', async (req: any, res: Response, next: NextFunction) => {
     const idPost = req.params.idPost;
-    const post = await Post.findById(idPost).populate('usuario', '-password').populate('comments.postedBy','-password').populate('likes.likedBy','-password').exec();
+    let post = null
+    try {
+        post = await Post.findById(idPost).populate('usuario', '-password').populate('comments.postedBy', '-password').populate('likes.likedBy', '-password').exec();
+    } catch (error) {
+
+    }
+
     if (post) {
         return res.json({
             ok: true,
@@ -50,7 +56,6 @@ postRoutes.post('/', [verificaToken], (req: any, res: Response, next: NextFuncti
     const body = req.body;
     body.usuario = req.usuario._id
     const imagenes = fileSystem.moverImgsEnTempToPost(req.usuario._id);
-    console.log(imagenes)
     body.imgs = imagenes;
     Post.create(body).then(async postDB => {
         await postDB.populate('usuario', '-password').execPopulate()
@@ -67,14 +72,19 @@ postRoutes.post('/', [verificaToken], (req: any, res: Response, next: NextFuncti
 })
 
 //EliminarPost
-postRoutes.delete('/:idPost', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
+postRoutes.delete('/remove/:idPost', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
     const idPost = req.params.idPost;
-    const post = await Post.findById(idPost).exec();
+    let post = null;
+    try {
+        post = await Post.findById(idPost).exec();
+    } catch (error) {
+
+    }
     if (post) {
         if (post.usuario == req.usuario._id) {
             Post.findByIdAndDelete(idPost).exec().then(postBorrado => {
                 if (postBorrado) {
-                    fileSystem.eliminarImagenesPost(req.usuario._id,postBorrado.imgs)
+                    fileSystem.eliminarImagenesPost(req.usuario._id, postBorrado.imgs)
                     return res.json({
                         ok: true,
                         post: postBorrado
@@ -108,13 +118,14 @@ postRoutes.delete('/:idPost', [verificaToken], async (req: any, res: Response, n
 
 //Subir fichero
 postRoutes.post('/upload', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
+
     if (!req.files) {
         return res.status(400).json({
             ok: false,
             mensaje: 'No se selcciono ningun archivo'
         });
     }
-    const file: FileUpload = req.files.imagen
+    const file: FileUpload = req.files.image
     if (!file) {
         return res.status(400).json({
             ok: false,
@@ -130,6 +141,8 @@ postRoutes.post('/upload', [verificaToken], async (req: any, res: Response, next
     }
     fileSystem.guardarImagenTemporal(file, req.usuario._id).then(async (nombreImagen: string) => {
         const usr = await Usuario.findById(req.usuario._id).exec();
+
+
         if (!usr) {
             return res.status(404).json({
                 ok: false,
@@ -154,6 +167,7 @@ postRoutes.post('/upload', [verificaToken], async (req: any, res: Response, next
 
 //Eliminar fichero temporal
 postRoutes.delete('/image/temp/:imageName', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
+
     const nombreImagen = req.params.imageName;
     if (!nombreImagen) {
         return res.status(404).json({
@@ -169,7 +183,7 @@ postRoutes.delete('/image/temp/:imageName', [verificaToken], async (req: any, re
         })
     }
     const index = usr.imgsTemp.indexOf(nombreImagen);
-    if(index<0){
+    if (index < 0) {
         return res.status(404).json({
             ok: false,
             message: 'El usuario no pose en su ese archivo array de archivos temporale',
@@ -177,8 +191,8 @@ postRoutes.delete('/image/temp/:imageName', [verificaToken], async (req: any, re
         })
     }
     if (fileSystem.eliminarFicheroTemp(req.usuario._id, nombreImagen)) {
-        usr.imgsTemp.splice(index,1);
-        await Usuario.findByIdAndUpdate(usr._id,usr).exec();
+        usr.imgsTemp.splice(index, 1);
+        await Usuario.findByIdAndUpdate(usr._id, usr).exec();
         res.json({
             ok: true,
             message: `${nombreImagen} eliminada`,
@@ -201,11 +215,12 @@ postRoutes.delete('/image/temp', [verificaToken], async (req: any, res: Response
             message: 'No se encontro el usuario'
         })
     }
-    usr.imgsTemp=[];
-    await Usuario.findByIdAndUpdate(usr._id,usr);
+    usr.imgsTemp = [];
+    await Usuario.findByIdAndUpdate(usr._id, usr);
     if (fileSystem.eliminarCarpetaTemp(req.usuario._id)) {
         res.json({
             ok: true,
+            usr,
             message: `Eliminada carpeta temp de ${req.usuario._id}`
         })
     } else {
@@ -223,7 +238,9 @@ postRoutes.get('/imagen/:userid/:img', async (req: any, res: Response, next: Nex
     const usuario = await Usuario.findById(userID).exec()
     if (!usuario) {
         return res.status(400).json({
-            
+            ok: false,
+            usuario,
+            message: 'usuario not found'
         })
     }
     const pathImg = fileSystem.getImgUrl(userID, img)  // Si no es correcta la imagen devulve imagen por defecto
@@ -234,7 +251,12 @@ postRoutes.get('/imagen/:userid/:img', async (req: any, res: Response, next: Nex
 postRoutes.post('/like/:idPost', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
     const idUsuario = req.usuario._id
     const idPost = req.params.idPost
-    const post = await Post.findById(idPost).exec();
+    let post: any;
+    try {
+        post = await Post.findById(idPost).exec();
+    } catch (error) {
+
+    }
     if (post) {
         let existeLike = false;
         post.likes.forEach(like => {
@@ -245,14 +267,14 @@ postRoutes.post('/like/:idPost', [verificaToken], async (req: any, res: Response
         if (existeLike) {
             post.likes.splice(post.likes.indexOf(idUsuario), 1);
         } else {
-            post.likes.push({likedBy:idUsuario});
+            post.likes.push({ likedBy: idUsuario });
         }
         Post.findByIdAndUpdate(idPost, post, { new: true }, async (err, postDB) => {
             if (postDB) {
                 await postDB.populate('usuario', '-password').execPopulate()
                 return res.json({
                     ok: true,
-                    postDB
+                    post
                 })
             }
         })
@@ -266,10 +288,18 @@ postRoutes.post('/like/:idPost', [verificaToken], async (req: any, res: Response
 
 //Add comentario
 postRoutes.post('/comment/:idPost', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
-    const idPost = req.params.idPost;
-    const idUsuario = req.usuario._id
-    const post = await Post.findById(idPost).exec();
-    const text = req.body.text;
+    let idPost: any;
+    let idUsuario: any
+    let post: any;
+    let text: any;
+    try {
+        idPost = req.params.idPost;
+        idUsuario = req.usuario._id
+        post = await Post.findById(idPost).exec();
+        text = req.body.text;
+    } catch (error) {
+
+    }
     if (!post) {
         return res.status(404).json({
             ok: false,
@@ -286,7 +316,6 @@ postRoutes.post('/comment/:idPost', [verificaToken], async (req: any, res: Respo
         text,
         postedBy: idUsuario
     })
-    console.log(idUsuario)
     Post.findByIdAndUpdate(idPost, post).exec().then(postDesactualizado => {
         if (postDesactualizado) {
             return res.json({
@@ -294,7 +323,7 @@ postRoutes.post('/comment/:idPost', [verificaToken], async (req: any, res: Respo
                 post
             })
         } else {
-            return res.json({
+            return res.status(404).json({
                 ok: false,
                 message: 'no se encontro el post'
             })
@@ -309,17 +338,39 @@ postRoutes.post('/comment/:idPost', [verificaToken], async (req: any, res: Respo
 
 //delete comentario
 postRoutes.delete('/comment/:idPost/:idComment', [verificaToken], async (req: any, res: Response, next: NextFunction) => {
-    const idPost = req.params.idPost;
-    const idUsuario = req.usuario._id
-    const idComment = req.params.idComment;
-    const post = await Post.findById(idPost).exec();
+    let idPost: any;
+    let idUsuario: any;
+    let idComment: any;
+    let comment: any;
+    let post: any;
+
+    try {
+        idPost = req.params.idPost;
+        idUsuario = req.usuario._id
+        idComment = req.params.idComment;
+        post = await Post.findById(idPost).exec();
+        comment = post.comments.find((commentario: any) => commentario._id == idComment);
+    } catch (error) { }
+    if (!idPost) {
+        return res.status(404).json({
+            ok: false,
+            message: 'no se el post'
+        })
+    }
+
+
     if (!post) {
         return res.status(404).json({
             ok: false,
             message: 'no se encontro el post'
         })
     }
-    const comment = post.comments.find(commentario => commentario._id == idComment);
+    if (!idComment) {
+        return res.status(404).json({
+            ok: false,
+            message: 'no se encontro el comentario en ese post'
+        })
+    }
     if (!comment) {
         return res.json({
             ok: false,
@@ -327,7 +378,7 @@ postRoutes.delete('/comment/:idPost/:idComment', [verificaToken], async (req: an
             post
         })
     }
-    if (comment.postedBy != idUsuario && post.usuario!=idUsuario) {
+    if (comment.postedBy != idUsuario && post.usuario != idUsuario) {
         return res.json({
             ok: false,
             message: 'no puedes borrar este comentario',
@@ -341,7 +392,7 @@ postRoutes.delete('/comment/:idPost/:idComment', [verificaToken], async (req: an
                     post
                 })
             } else {
-                return res.status(400).json({
+                return res.status(404).json({
                     ok: false,
                     message: 'no se encontro el post'
                 })
