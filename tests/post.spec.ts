@@ -225,7 +225,7 @@ describe('UserTest: ', () => {
                 chai.request(url)
                     .post('/post/upload')
                     .set({ 'x-token': token })
-                    .attach('image', fs.readFileSync('/home/nacho/ws/visual-ws/backend-iSocial/README.MD'), 'read.me')
+                    .attach('image', fs.readFileSync('README.MD'), 'read.me')
                     .end(function (err: any, res: any) {
                         expect(res).to.have.status(409);
                         expect(res.body.ok).to.equals(false);
@@ -271,7 +271,7 @@ describe('UserTest: ', () => {
             chai.request(url)
                 .post('/post/upload')
                 .set({ 'x-token': token })
-                .attach('image', fs.readFileSync('/home/nacho/Desktop/qricon.png'), 'test.png')
+                .attach('image', fs.readFileSync('qricon.png'), 'test.png')
                 .end(function (err: any, res: any) {
                     expect(res).to.have.status(200);
                     expect(res.body.ok).to.equals(true);
@@ -321,7 +321,7 @@ describe('UserTest: ', () => {
             chai.request(url)
                 .post('/post/upload')
                 .set({ 'x-token': token })
-                .attach('image', fs.readFileSync('/home/nacho/Desktop/qricon.png'), 'test.png')
+                .attach('image', fs.readFileSync('qricon.png'), 'test.png')
                 .end(function (err: any, res: any) {
                     expect(res).to.have.status(200);
                     expect(res.body.ok).to.equals(true);
