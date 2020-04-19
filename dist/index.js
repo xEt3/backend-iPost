@@ -22,7 +22,7 @@ server.app.use(cors_1.default({ origin: true, credentials: true }));
 server.app.use('/user', usuario_routes_1.default);
 server.app.use('/post', post_routes_1.default);
 //Conectar db
-mongoose_1.default.connect('mongodb://localhost:27017/fotosgram', { useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false }, (err) => {
+mongoose_1.default.connect('mongodb://localhost:27017/testiPost', { useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false }, (err) => {
     if (err) {
         console.error('Imposible conectar con la base de datos');
     }

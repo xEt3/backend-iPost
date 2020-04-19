@@ -18,7 +18,20 @@ const token_1 = require("../classes/token");
 const autenticacion_1 = require("../middlewares/autenticacion");
 const userRoutes = express_1.Router();
 //Crear un usuario
-userRoutes.post('/create', (req, res) => {
+userRoutes.post('/create', (req, res) => __awaiter(this, void 0, void 0, function* () {
+    if (!req.body.nombre || !req.body.email || !req.body.avatar || !req.body.password) {
+        return res.status(400).json({
+            ok: false,
+            error: 'Shold indicate name, email, avatar and password'
+        });
+    }
+    const usuario = yield usuario_model_1.Usuario.findOne({ email: req.body.email }).exec();
+    if (usuario) {
+        return res.status(400).json({
+            ok: false,
+            error: ' El usuario con ese email ya existe'
+        });
+    }
     const user = {
         nombre: req.body.nombre,
         email: req.body.email,
@@ -42,11 +55,53 @@ userRoutes.post('/create', (req, res) => {
             err: error
         });
     });
-});
+}));
+//Obtener user de forma paginada
+userRoutes.get('/', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    try {
+        let pagina = Number(req.query.pagina - 1) || 0;
+        let saltar = pagina * 10;
+        const users = yield usuario_model_1.Usuario.find().limit(10).skip(saltar).sort({ _id: -1 }).exec();
+        res.json({
+            ok: true,
+            users
+        });
+    }
+    catch (error) {
+        res.status(400).json({
+            ok: false,
+            error: 'pagina invalida'
+        });
+    }
+}));
+//Get user by id
+userRoutes.get('/get/:idUser', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    try {
+        const idUser = req.params.idUser;
+        const user = yield usuario_model_1.Usuario.findById(idUser).exec();
+        if (user) {
+            return res.json({
+                ok: true,
+                user: user
+            });
+        }
+        else {
+            return res.status(404).json({
+                ok: false,
+                message: 'Id user invalido'
+            });
+        }
+    }
+    catch (err) {
+        return res.status(404).json({
+            ok: false,
+            message: 'Id user invalido'
+        });
+    }
+}));
 //Login
 userRoutes.post('/login', (req, res) => {
     const body = req.body;
-    console.log(body);
     usuario_model_1.Usuario.findOne({ email: body.email }, (err, userDB) => {
         if (err) {
             return res.status(404).json({
@@ -73,43 +128,45 @@ userRoutes.post('/login', (req, res) => {
             });
         }
         else {
-            return res.json({});
+            return res.status(400).json({
+                ok: false,
+                mensaje: 'Usuario/contraseña incorrectos'
+            });
         }
     });
 });
 //Follow/Unfollow user
 userRoutes.post('/follow/:idUser', [autenticacion_1.verificaToken], (req, res) => __awaiter(this, void 0, void 0, function* () {
-    const usuarioToFollow = yield usuario_model_1.Usuario.findById(req.params.idUser).exec();
-    const usuario = yield usuario_model_1.Usuario.findById(req.usuario._id).exec();
+    let usuarioToFollow;
+    let usuario;
+    try {
+        usuarioToFollow = yield usuario_model_1.Usuario.findById(req.params.idUser).exec();
+        usuario = yield usuario_model_1.Usuario.findById(req.usuario._id).exec();
+    }
+    catch (error) { }
     if (!usuarioToFollow || !usuario) {
         return res.status(404).json({
             ok: false,
             message: 'No existe el usuario al que quieres seguir'
         });
     }
-    console.log(usuario);
-    let isFollowing = false;
-    usuario.following.forEach(usr => {
-        console.log('iiiid', usr.id);
-        console.log('oo', usuarioToFollow._id);
-        if (usr.id == usuarioToFollow._id) {
-            isFollowing = true;
-        }
-    });
-    console.log(isFollowing);
-    if (isFollowing) {
-        usuario.following.splice(usuario.following.indexOf(usuarioToFollow._id), 1);
-        usuarioToFollow.followers.splice(usuario.followers.indexOf(usuario._id), 1);
+    const indexUserToFollowInUserFollowing = usuario.following.findIndex((usr) => usr._id == String(usuarioToFollow._id));
+    if (indexUserToFollowInUserFollowing >= 0) {
+        usuario.following.splice(indexUserToFollowInUserFollowing, 1);
+        const indexUserInUserToFollowFollower = usuarioToFollow.followers.findIndex((usr) => usr._id == usuario._id);
+        usuarioToFollow.followers.splice(indexUserInUserToFollowFollower, 1);
     }
     else {
-        usuario.following.push(usuarioToFollow.id);
+        usuario.following.push(usuarioToFollow._id);
         usuarioToFollow.followers.push(usuario._id);
     }
     usuario_model_1.Usuario.findByIdAndUpdate(usuario._id, usuario).exec().then(() => {
-        res.json({
-            ok: true,
-            usuario,
-            usuarioToFollow
+        usuario_model_1.Usuario.findByIdAndUpdate(usuarioToFollow._id, usuarioToFollow).then(() => {
+            res.json({
+                ok: true,
+                usuario,
+                usuarioToFollow
+            });
         });
     }).catch(err => {
         res.status(400).json({
@@ -153,11 +210,11 @@ userRoutes.post('/update', autenticacion_1.verificaToken, (req, res) => {
     });
 });
 //get usuario from token
-userRoutes.get('/', [autenticacion_1.verificaToken], (req, res) => {
-    const usuario = req.usuario;
+userRoutes.get('/me', [autenticacion_1.verificaToken], (req, res) => __awaiter(this, void 0, void 0, function* () {
+    const usuario = yield usuario_model_1.Usuario.findById(req.usuario._id).exec();
     res.json({
         ok: true,
         usuario
     });
-});
+}));
 exports.default = userRoutes;

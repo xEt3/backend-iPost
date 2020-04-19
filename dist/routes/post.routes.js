@@ -37,9 +37,14 @@ postRoutes.get('/', (req, res, next) => __awaiter(this, void 0, void 0, function
     }
 }));
 //Obtener Post
-postRoutes.get('/:idPost', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+postRoutes.get('/get/:idPost', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
     const idPost = req.params.idPost;
-    const post = yield post_model_1.Post.findById(idPost).populate('usuario', '-password').populate('comments.postedBy', '-password').populate('likes.likedBy', '-password').exec();
+    let post = null;
+    try {
+        post = yield post_model_1.Post.findById(idPost).populate('usuario', '-password').populate('comments.postedBy', '-password').populate('likes.likedBy', '-password').exec();
+    }
+    catch (error) {
+    }
     if (post) {
         return res.json({
             ok: true,
@@ -58,7 +63,6 @@ postRoutes.post('/', [autenticacion_1.verificaToken], (req, res, next) => {
     const body = req.body;
     body.usuario = req.usuario._id;
     const imagenes = fileSystem.moverImgsEnTempToPost(req.usuario._id);
-    console.log(imagenes);
     body.imgs = imagenes;
     post_model_1.Post.create(body).then((postDB) => __awaiter(this, void 0, void 0, function* () {
         yield postDB.populate('usuario', '-password').execPopulate();
@@ -74,9 +78,14 @@ postRoutes.post('/', [autenticacion_1.verificaToken], (req, res, next) => {
     });
 });
 //EliminarPost
-postRoutes.delete('/:idPost', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+postRoutes.delete('/remove/:idPost', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
     const idPost = req.params.idPost;
-    const post = yield post_model_1.Post.findById(idPost).exec();
+    let post = null;
+    try {
+        post = yield post_model_1.Post.findById(idPost).exec();
+    }
+    catch (error) {
+    }
     if (post) {
         if (post.usuario == req.usuario._id) {
             post_model_1.Post.findByIdAndDelete(idPost).exec().then(postBorrado => {
@@ -120,7 +129,7 @@ postRoutes.post('/upload', [autenticacion_1.verificaToken], (req, res, next) => 
             mensaje: 'No se selcciono ningun archivo'
         });
     }
-    const file = req.files.imagen;
+    const file = req.files.image;
     if (!file) {
         return res.status(400).json({
             ok: false,
@@ -211,6 +220,7 @@ postRoutes.delete('/image/temp', [autenticacion_1.verificaToken], (req, res, nex
     if (fileSystem.eliminarCarpetaTemp(req.usuario._id)) {
         res.json({
             ok: true,
+            usr,
             message: `Eliminada carpeta temp de ${req.usuario._id}`
         });
     }
@@ -227,7 +237,11 @@ postRoutes.get('/imagen/:userid/:img', (req, res, next) => __awaiter(this, void 
     const img = req.params.img;
     const usuario = yield usuario_model_1.Usuario.findById(userID).exec();
     if (!usuario) {
-        return res.status(400).json({});
+        return res.status(400).json({
+            ok: false,
+            usuario,
+            message: 'usuario not found'
+        });
     }
     const pathImg = fileSystem.getImgUrl(userID, img); // Si no es correcta la imagen devulve imagen por defecto
     return res.sendFile(pathImg);
@@ -236,7 +250,12 @@ postRoutes.get('/imagen/:userid/:img', (req, res, next) => __awaiter(this, void 
 postRoutes.post('/like/:idPost', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
     const idUsuario = req.usuario._id;
     const idPost = req.params.idPost;
-    const post = yield post_model_1.Post.findById(idPost).exec();
+    let post;
+    try {
+        post = yield post_model_1.Post.findById(idPost).exec();
+    }
+    catch (error) {
+    }
     if (post) {
         let existeLike = false;
         post.likes.forEach(like => {
@@ -255,7 +274,7 @@ postRoutes.post('/like/:idPost', [autenticacion_1.verificaToken], (req, res, nex
                 yield postDB.populate('usuario', '-password').execPopulate();
                 return res.json({
                     ok: true,
-                    postDB
+                    post
                 });
             }
         }));
@@ -269,10 +288,18 @@ postRoutes.post('/like/:idPost', [autenticacion_1.verificaToken], (req, res, nex
 }));
 //Add comentario
 postRoutes.post('/comment/:idPost', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-    const idPost = req.params.idPost;
-    const idUsuario = req.usuario._id;
-    const post = yield post_model_1.Post.findById(idPost).exec();
-    const text = req.body.text;
+    let idPost;
+    let idUsuario;
+    let post;
+    let text;
+    try {
+        idPost = req.params.idPost;
+        idUsuario = req.usuario._id;
+        post = yield post_model_1.Post.findById(idPost).exec();
+        text = req.body.text;
+    }
+    catch (error) {
+    }
     if (!post) {
         return res.status(404).json({
             ok: false,
@@ -289,7 +316,6 @@ postRoutes.post('/comment/:idPost', [autenticacion_1.verificaToken], (req, res, 
         text,
         postedBy: idUsuario
     });
-    console.log(idUsuario);
     post_model_1.Post.findByIdAndUpdate(idPost, post).exec().then(postDesactualizado => {
         if (postDesactualizado) {
             return res.json({
@@ -298,7 +324,7 @@ postRoutes.post('/comment/:idPost', [autenticacion_1.verificaToken], (req, res, 
             });
         }
         else {
-            return res.json({
+            return res.status(404).json({
                 ok: false,
                 message: 'no se encontro el post'
             });
@@ -312,17 +338,37 @@ postRoutes.post('/comment/:idPost', [autenticacion_1.verificaToken], (req, res, 
 }));
 //delete comentario
 postRoutes.delete('/comment/:idPost/:idComment', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-    const idPost = req.params.idPost;
-    const idUsuario = req.usuario._id;
-    const idComment = req.params.idComment;
-    const post = yield post_model_1.Post.findById(idPost).exec();
+    let idPost;
+    let idUsuario;
+    let idComment;
+    let comment;
+    let post;
+    try {
+        idPost = req.params.idPost;
+        idUsuario = req.usuario._id;
+        idComment = req.params.idComment;
+        post = yield post_model_1.Post.findById(idPost).exec();
+        comment = post.comments.find((commentario) => commentario._id == idComment);
+    }
+    catch (error) { }
+    if (!idPost) {
+        return res.status(404).json({
+            ok: false,
+            message: 'no se el post'
+        });
+    }
     if (!post) {
         return res.status(404).json({
             ok: false,
             message: 'no se encontro el post'
         });
     }
-    const comment = post.comments.find(commentario => commentario._id == idComment);
+    if (!idComment) {
+        return res.status(404).json({
+            ok: false,
+            message: 'no se encontro el comentario en ese post'
+        });
+    }
     if (!comment) {
         return res.json({
             ok: false,
@@ -346,7 +392,7 @@ postRoutes.delete('/comment/:idPost/:idComment', [autenticacion_1.verificaToken]
                 });
             }
             else {
-                return res.status(400).json({
+                return res.status(404).json({
                     ok: false,
                     message: 'no se encontro el post'
                 });

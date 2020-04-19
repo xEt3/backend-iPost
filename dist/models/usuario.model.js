@@ -29,14 +29,12 @@ const usuarioSchema = new mongoose_1.Schema({
             usuario: {
                 type: mongoose_1.Schema.Types.ObjectId,
                 ref: 'Usuario',
-                unique: true
             }
         }],
     following: [{
             usuario: {
                 type: mongoose_1.Schema.Types.ObjectId,
                 ref: 'Usuario',
-                unique: true
             }
         }],
     admin: {
