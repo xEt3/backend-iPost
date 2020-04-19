@@ -34,5 +34,16 @@ Base de datos: mongodb://localhost:27017/iSocial
 
 
 ## Iniciar server
-<code>nodemon dist/</code>
+
+* ***Compile js code***:
+
+  <code>nodemon dist/</code>
+
+* ***Start mongdb server***
+
+  <code>sudo systemctl start mongod/</code>
+
+* ***start service***
+
+  <code>nodemon dist/</code>
 
