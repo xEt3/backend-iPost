@@ -1,18 +1,18 @@
 # Backend iPost
 
-puerto servidor : 3000 tcp
+* Server Port : `3000` tcp
+* Base de datos oficial: `mongodb://localhost:27017/iPost`
+* Base de datos testing: `mongodb://localhost:27017/testiPost`
 
-Base de datos: mongodb://localhost:27017/iSocial
+## Dependencies
+  * [NodeJs 12](https://nodejs.org/es/)
 
-## Dependencias
-[NodeJs 12](https://nodejs.org/es/)
-
-[MongoDB](https://docs.mongodb.com/manual/administration/install-community/)
-
-
+  * [MongoDB](https://docs.mongodb.com/manual/administration/install-community/)
 
 
-## Instalar dependencias Node
+
+
+## Install Node dependencies
 
  Nodemon: <code>npm install -g nodemon</code>
  
@@ -30,10 +30,10 @@ Base de datos: mongodb://localhost:27017/iSocial
   
   Bcryp: <code>npm install bcrypt</code>
   
-  Comando para instalarlas todas: <code>npm install express body-parser cors mongoose express-fileupload jsonwebtoken bcrypt</code>
+  Install all dependencies: <code>npm install express body-parser cors mongoose express-fileupload jsonwebtoken bcrypt</code>
 
 
-## Iniciar server
+## Init server
 
 * ***Compile js code***:
 
