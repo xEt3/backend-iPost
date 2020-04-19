@@ -462,6 +462,44 @@ describe('UserTest: ', () => {
 
         });
 
+
+        describe('get posts User', () => {
+
+            it('should return 10 first post', (done) => {
+                chai.request(url)
+                    .get(`/post/postUser/${users[0]}`)
+                    .end(function (err: any, res: any) {
+                        console.log(`/post/postUser/${users[0]}`);
+                        expect(res).to.have.status(200);
+                        expect(res.body.ok).to.equals(true);
+                        expect(res.body.posts.length).to.equals(10);
+                        done();
+                    });
+            });
+
+            it('should return an empty array', (done) => {
+                chai.request(url)
+                    .get(`/post/postUser/${users[0]}`)
+                    .end(function (err: any, res: any) {
+                        expect(res).to.have.status(200);
+                        expect(res.body.ok).to.equals(true)
+                        expect(res.body.posts.length).to.equals(0);
+                        done();
+                    });
+            });
+
+            it('should return an error invalid page', (done) => {
+                chai.request(url)
+                    .get('/post?pagina=-1')
+                    .end(function (err: any, res: any) {
+                        // expect(res).to.have.status(400);
+                        expect(res.body.ok).to.equals(false)
+                        done();
+                    });
+            });
+
+        });
+
     });
 
     after((done) => {
