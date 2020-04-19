@@ -37,7 +37,7 @@ Base de datos: mongodb://localhost:27017/iSocial
 
 * ***Compile js code***:
 
-  <code>tsc -w/</code>
+  <code>tsc -w</code>
 
 * ***Start mongdb server***
 
