@@ -36,6 +36,25 @@ postRoutes.get('/', (req, res, next) => __awaiter(this, void 0, void 0, function
         });
     }
 }));
+//Obtener posts user
+postRoutes.get('/postUser/:idUser', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    const idUser = req.params.idUser;
+    try {
+        let pagina = Number(req.query.pagina - 1) || 0;
+        let saltar = pagina * 10;
+        const posts = yield post_model_1.Post.find({ usuario: idUser }).limit(10).skip(saltar).sort({ _id: -1 }).populate('usuario', '-password').populate('comments.postedBy', '-password').populate('likes.likedBy', '-password').exec();
+        res.json({
+            ok: true,
+            posts
+        });
+    }
+    catch (error) {
+        res.status(400).json({
+            ok: false,
+            error: 'pagina invalida'
+        });
+    }
+}));
 //Obtener Post
 postRoutes.get('/get/:idPost', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
     const idPost = req.params.idPost;
