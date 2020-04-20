@@ -28,6 +28,25 @@ postRoutes.get('/', async (req: any, res: Response, next: NextFunction) => {
     }
 })
 
+//Obtener posts user
+postRoutes.get('/postUser/:idUser', async (req: any, res: Response, next: NextFunction) => {
+    const idUser = req.params.idUser;
+    try {
+        let pagina = Number(req.query.pagina - 1) || 0;
+        let saltar = pagina * 10;
+        const posts = await Post.find({usuario:idUser}).limit(10).skip(saltar).sort({ _id: -1 }).populate('usuario', '-password').populate('comments.postedBy', '-password').populate('likes.likedBy', '-password').exec();
+        res.json({
+            ok: true,
+            posts
+        })
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            error: 'pagina invalida'
+        })
+    }
+})
+
 //Obtener Post
 postRoutes.get('/get/:idPost', async (req: any, res: Response, next: NextFunction) => {
     const idPost = req.params.idPost;

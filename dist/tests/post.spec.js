@@ -44,8 +44,15 @@ describe('UserTest: ', () => {
                     });
                     for (let i = 0; i < 21; i++) {
                         const post = {
-                            menssaje: 'mensaje' + i,
+                            menssaje: 'mensaje' + i + ' - testing0',
                             usuario: String(users[0]._id)
+                        };
+                        posts.push(post);
+                    }
+                    for (let i = 0; i < 21; i++) {
+                        const post = {
+                            menssaje: 'mensaje' + i + ' - testing1',
+                            usuario: String(users[1]._id)
                         };
                         posts.push(post);
                     }
@@ -103,7 +110,7 @@ describe('UserTest: ', () => {
         });
         it('should return an empty array', (done) => {
             chai.request(url)
-                .get('/post?pagina=4')
+                .get('/post?pagina=10')
                 .end(function (err, res) {
                 expect(res).to.have.status(200);
                 expect(res.body.ok).to.equals(true);
@@ -143,7 +150,7 @@ describe('UserTest: ', () => {
             });
         });
     });
-    describe('get post', () => {
+    describe('delete post', () => {
         it('should return ok and delete post', (done) => {
             chai.request(url)
                 .delete(`/post/remove/${posts[0]._id}`)
@@ -186,7 +193,7 @@ describe('UserTest: ', () => {
                 chai.request(url)
                     .post('/post/upload')
                     .set({ 'x-token': token })
-                    .attach('image', fs_1.default.readFileSync('/home/nacho/Desktop/qricon.png'), 'test.png')
+                    .attach('image', fs_1.default.readFileSync('qricon.png'), 'test.png')
                     .end(function (err, res) {
                     expect(res).to.have.status(200);
                     expect(res.body.ok).to.equals(true);
@@ -411,6 +418,38 @@ describe('UserTest: ', () => {
                 .set({ 'x-token': token })
                 .end(function (err, res) {
                 expect(res).to.have.status(404);
+                expect(res.body.ok).to.equals(false);
+                done();
+            });
+        });
+    });
+    describe('get posts User', () => {
+        it('should return 10 first post', (done) => {
+            chai.request(url)
+                .get(`/post/postUser/${users[0]}`)
+                .end(function (err, res) {
+                console.log(`/post/postUser/${users[0]}`);
+                expect(res).to.have.status(200);
+                expect(res.body.ok).to.equals(true);
+                expect(res.body.posts.length).to.equals(10);
+                done();
+            });
+        });
+        it('should return an empty array', (done) => {
+            chai.request(url)
+                .get(`/post/postUser/${users[0]}?pagina=10`)
+                .end(function (err, res) {
+                expect(res).to.have.status(200);
+                expect(res.body.ok).to.equals(true);
+                expect(res.body.posts.length).to.equals(0);
+                done();
+            });
+        });
+        it('should return an error invalid page', (done) => {
+            chai.request(url)
+                .get(`/post/postUser/${users[0]}?pagina=-1`)
+                .end(function (err, res) {
+                // expect(res).to.have.status(400);
                 expect(res.body.ok).to.equals(false);
                 done();
             });

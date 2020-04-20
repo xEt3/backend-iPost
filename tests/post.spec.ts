@@ -34,8 +34,15 @@ describe('UserTest: ', () => {
                 });
                 for (let i = 0; i < 21; i++) {
                     const post = {
-                        menssaje: 'mensaje' + i,
+                        menssaje: 'mensaje' + i+' - testing0',
                         usuario: String(users[0]._id)
+                    }
+                    posts.push(post);
+                }
+                for (let i = 0; i < 21; i++) {
+                    const post = {
+                        menssaje: 'mensaje' + i+' - testing1',
+                        usuario: String(users[1]._id)
                     }
                     posts.push(post);
                 }
@@ -100,7 +107,7 @@ describe('UserTest: ', () => {
 
         it('should return an empty array', (done) => {
             chai.request(url)
-                .get('/post?pagina=4')
+                .get('/post?pagina=10')
                 .end(function (err: any, res: any) {
                     expect(res).to.have.status(200);
                     expect(res.body.ok).to.equals(true)
@@ -149,7 +156,7 @@ describe('UserTest: ', () => {
     });
 
 
-    describe('get post', () => {
+    describe('delete post', () => {
 
         it('should return ok and delete post', (done) => {
             chai.request(url)
@@ -199,7 +206,7 @@ describe('UserTest: ', () => {
                 chai.request(url)
                     .post('/post/upload')
                     .set({ 'x-token': token })
-                    .attach('image', fs.readFileSync('/home/nacho/Desktop/qricon.png'), 'test.png')
+                    .attach('image', fs.readFileSync('qricon.png'), 'test.png')
                     .end(function (err: any, res: any) {
                         expect(res).to.have.status(200);
                         expect(res.body.ok).to.equals(true);
@@ -360,7 +367,6 @@ describe('UserTest: ', () => {
     })
 
     describe('Like/dislike post', () => {
-
         it('should put like on post', (done) => {
             chai.request(url)
                 .post(`/post/like/${postAux._id}`)
@@ -404,6 +410,7 @@ describe('UserTest: ', () => {
                 });
         })
     });
+
     describe('Add comment', () => {
         it('Should insert coment in post with id postAux', (done) => {
             chai.request(url)
@@ -461,6 +468,41 @@ describe('UserTest: ', () => {
                 });
 
         });
+    });
+
+    describe('get posts User', () => {
+        it('should return 10 first post', (done) => {
+            chai.request(url)
+                .get(`/post/postUser/${users[0]}`)
+                .end(function (err: any, res: any) {
+                    console.log(`/post/postUser/${users[0]}`);
+                    expect(res).to.have.status(200);
+                    expect(res.body.ok).to.equals(true);
+                    expect(res.body.posts.length).to.equals(10);
+                    done();
+                });
+        });
+
+        it('should return an empty array', (done) => {
+            chai.request(url)
+                .get(`/post/postUser/${users[0]}?pagina=10`)
+                .end(function (err: any, res: any) {
+                    expect(res).to.have.status(200);
+                    expect(res.body.ok).to.equals(true)
+                    expect(res.body.posts.length).to.equals(0);
+                    done();
+                });
+        });
+
+        it('should return an error invalid page', (done) => {
+            chai.request(url)
+                .get(`/post/postUser/${users[0]}?pagina=-1`)
+                .end(function (err: any, res: any) {
+                    // expect(res).to.have.status(400);
+                    expect(res.body.ok).to.equals(false)
+                    done();
+                });
+        });
 
     });
 
@@ -471,5 +513,6 @@ describe('UserTest: ', () => {
             });
         })
     });
+});
 
-})
+
