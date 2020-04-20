@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
-import { Usuario, Iusuario } from '../models/usuario.model';
+import { Usuario } from '../models/usuario.model';
 import bcrypt from 'bcrypt';
-import bodyParser from 'body-parser';
 
 let chai = require('chai');
 let chaiHttp = require('chai-http');
@@ -9,8 +8,7 @@ const expect = require('chai').expect;
 chai.use(chaiHttp);
 const url = 'http://localhost:3000';
 let users: any[] = []
-
-
+let token: any;
 
 describe('UserTest: ', () => {
     before((done) => {
@@ -34,9 +32,7 @@ describe('UserTest: ', () => {
     })
 
     describe('Users', () => {
-
         describe('Add user ', () => {
-
             it('should insert a user', (done) => {
                 chai.request(url)
                     .post('/user/create')
@@ -84,7 +80,6 @@ describe('UserTest: ', () => {
         });
 
         describe('Get all user', () => {
-
             it('Should return array with all user', (done) => {
                 chai.request(url)
                     .get('/user')
@@ -107,11 +102,9 @@ describe('UserTest: ', () => {
                         done();
                     });
             });
-
         });
 
         describe('Get user', () => {
-
             it('Should return a single user', (done) => {
                 chai.request(url)
                     .get(`/user/get/${users[0]._id}`)
@@ -132,12 +125,9 @@ describe('UserTest: ', () => {
                         done();
                     });
             });
-
-
         });
 
         describe('Login', () => {
-
             it('Shold verificate user and return token', (done) => {
                 chai.request(url)
                     .post(`/user/login`)
@@ -203,11 +193,9 @@ describe('UserTest: ', () => {
                         done();
                     });
             })
-
         });
 
         describe('Follow/Unfollow user', () => {
-            let token: any;
             before('Login user to do the operation', (done) => {
                 chai.request(url)
                     .post(`/user/login`)
@@ -274,82 +262,81 @@ describe('UserTest: ', () => {
                         done()
                     });
             })
+        });
 
-            describe('Update User', () => {
+        describe('Update User', () => {
 
-                before('Login user to do the operations', (done) => {
-                    chai.request(url)
-                        .post(`/user/login`)
-                        .send({ email: users[0].email, password: '123456' })
-                        .end(function (err: any, res: any) {
-                            token = res.body.token;
-                            done();
-                        });
-                })
+            before('Login user to do the operations', (done) => {
+                chai.request(url)
+                    .post(`/user/login`)
+                    .send({ email: users[0].email, password: '123456' })
+                    .end(function (err: any, res: any) {
+                        token = res.body.token;
+                        done();
+                    });
+            })
 
-                it('Should change the name and return new token', (done) => {
-                    chai.request(url)
-                        .post(`/user/update`)
-                        .send({ nombre: 'new name' })
-                        .set({ 'x-token': token })
-                        .end(function (err: any, res: any) {
-                            expect(res).to.have.status(200);
-                            expect(res.body.token).to.not.equals('');
-                            token = res.body.token;
-                            done()
-                        });
-                })
+            it('Should change the name and return new token', (done) => {
+                chai.request(url)
+                    .post(`/user/update`)
+                    .send({ nombre: 'new name' })
+                    .set({ 'x-token': token })
+                    .end(function (err: any, res: any) {
+                        expect(res).to.have.status(200);
+                        expect(res.body.token).to.not.equals('');
+                        token = res.body.token;
+                        done()
+                    });
+            })
 
-                it('Should change the email and return new token', (done) => {
-                    chai.request(url)
-                        .post(`/user/update`)
-                        .send({ email: 'new email' })
-                        .set({ 'x-token': token })
-                        .end(function (err: any, res: any) {
-                            expect(res).to.have.status(200);
-                            expect(res.body.token).to.not.equals('');
-                            token = res.body.token;
-                            done()
-                        });
-                })
+            it('Should change the email and return new token', (done) => {
+                chai.request(url)
+                    .post(`/user/update`)
+                    .send({ email: 'new email' })
+                    .set({ 'x-token': token })
+                    .end(function (err: any, res: any) {
+                        expect(res).to.have.status(200);
+                        expect(res.body.token).to.not.equals('');
+                        token = res.body.token;
+                        done()
+                    });
+            })
 
-                it('Should change the avatar and return new token', (done) => {
-                    chai.request(url)
-                        .post(`/user/update`)
-                        .send({ avatar: 'av-new.png' })
-                        .set({ 'x-token': token })
-                        .end(function (err: any, res: any) {
-                            expect(res).to.have.status(200);
-                            expect(res.body.token).to.not.equals('');
-                            token = res.body.token;
-                            done()
-                        });
-                })
+            it('Should change the avatar and return new token', (done) => {
+                chai.request(url)
+                    .post(`/user/update`)
+                    .send({ avatar: 'av-new.png' })
+                    .set({ 'x-token': token })
+                    .end(function (err: any, res: any) {
+                        expect(res).to.have.status(200);
+                        expect(res.body.token).to.not.equals('');
+                        token = res.body.token;
+                        done()
+                    });
+            })
 
-                it('Should return the same token', (done) => {
-                    chai.request(url)
-                        .post(`/user/update`)
-                        .set({ 'x-token': token })
-                        .end(function (err: any, res: any) {
-                            const newToken = res.body.token;
-                            expect(res).to.have.status(200);
-                            expect(newToken).to.equals(token);
-                            done()
-                        });
-                })
+            it('Should return the same token', (done) => {
+                chai.request(url)
+                    .post(`/user/update`)
+                    .set({ 'x-token': token })
+                    .end(function (err: any, res: any) {
+                        const newToken = res.body.token;
+                        expect(res).to.have.status(200);
+                        expect(newToken).to.equals(token);
+                        done()
+                    });
+            })
 
-                it('Should the new avatar with new atributes', (done) => {
-                    chai.request(url)
-                        .get(`/user/me`)
-                        .set({ 'x-token': token })
-                        .end(function (err: any, res: any) {
-                            expect(res.body.usuario.email).to.equals('new email');
-                            expect(res.body.usuario.nombre).to.equals('new name');
-                            expect(res.body.usuario.avatar).to.equals('av-new.png');
-                            done()
-                        });
-                })
-
+            it('Should the new avatar with new atributes', (done) => {
+                chai.request(url)
+                    .get(`/user/me`)
+                    .set({ 'x-token': token })
+                    .end(function (err: any, res: any) {
+                        expect(res.body.usuario.email).to.equals('new email');
+                        expect(res.body.usuario.nombre).to.equals('new name');
+                        expect(res.body.usuario.avatar).to.equals('av-new.png');
+                        done()
+                    });
             })
         })
     })
@@ -361,5 +348,4 @@ describe('UserTest: ', () => {
             });
         })
     });
-
 })

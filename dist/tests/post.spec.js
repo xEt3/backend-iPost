@@ -150,7 +150,7 @@ describe('UserTest: ', () => {
             });
         });
     });
-    describe('get post', () => {
+    describe('delete post', () => {
         it('should return ok and delete post', (done) => {
             chai.request(url)
                 .delete(`/post/remove/${posts[0]._id}`)
@@ -455,11 +455,11 @@ describe('UserTest: ', () => {
             });
         });
     });
-    // after((done) => {
-    //     mongoose.connect('mongodb://localhost:27017/testiPost', { useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false }, function () {
-    //         mongoose.connection.db.dropDatabase(function () {
-    //             done()
-    //         });
-    //     })
-    // });
+    after((done) => {
+        mongoose_1.default.connect('mongodb://localhost:27017/testiPost', { useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false }, function () {
+            mongoose_1.default.connection.db.dropDatabase(function () {
+                done();
+            });
+        });
+    });
 });
