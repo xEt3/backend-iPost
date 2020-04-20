@@ -278,7 +278,7 @@ describe('UserTest: ', () => {
             chai.request(url)
                 .post('/post/upload')
                 .set({ 'x-token': token })
-                .attach('image', fs.readFileSync('/home/nacho/Desktop/qricon.png'), 'test.png')
+                .attach('image', fs.readFileSync('qricon.png'), 'test.png')
                 .end(function (err: any, res: any) {
                     expect(res).to.have.status(200);
                     expect(res.body.ok).to.equals(true);
