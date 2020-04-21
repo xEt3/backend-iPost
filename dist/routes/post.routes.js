@@ -55,7 +55,40 @@ postRoutes.get('/postUser/:idUser', (req, res, next) => __awaiter(this, void 0, 
         });
     }
 }));
-//Obtener Post
+//Obtener posts users following
+postRoutes.get('/postFollowing', [autenticacion_1.verificaToken], (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    let user;
+    let usersFollowing = [];
+    try {
+        let user = yield usuario_model_1.Usuario.findById(req.usuario._id).exec();
+        usersFollowing.push(req.usuario._id);
+        user.following.forEach((usr) => {
+            usersFollowing.push(usr._id);
+        });
+    }
+    catch (error) {
+        res.status(404).json({
+            ok: false,
+            error
+        });
+    }
+    try {
+        let pagina = Number(req.query.pagina - 1) || 0;
+        let saltar = pagina * 10;
+        const posts = yield post_model_1.Post.find({ usuario: usersFollowing }).limit(10).skip(saltar).sort({ created: -1 }).populate('usuario', '-password').populate('comments.postedBy', '-password').populate('likes.likedBy', '-password').exec();
+        res.json({
+            ok: true,
+            posts
+        });
+    }
+    catch (error) {
+        res.status(400).json({
+            ok: false,
+            error
+        });
+    }
+}));
+//get Post
 postRoutes.get('/get/:idPost', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
     const idPost = req.params.idPost;
     let post = null;
