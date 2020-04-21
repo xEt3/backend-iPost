@@ -34,14 +34,15 @@ describe('UserTest: ', () => {
                 });
                 for (let i = 0; i < 21; i++) {
                     const post = {
-                        menssaje: 'mensaje' + i+' - testing0',
+                        menssaje: 'mensaje' + i + ' - testing0',
                         usuario: String(users[0]._id)
                     }
                     posts.push(post);
                 }
+               await new Promise( resolve => setTimeout(resolve, 500) );
                 for (let i = 0; i < 21; i++) {
                     const post = {
-                        menssaje: 'mensaje' + i+' - testing1',
+                        menssaje: 'mensaje' + i + ' - testing1',
                         usuario: String(users[1]._id)
                     }
                     posts.push(post);
@@ -377,8 +378,6 @@ describe('UserTest: ', () => {
                     expect(res.body.post).to.not.equals(undefined);
                     expect(res.body.post.usuario).to.not.equals(undefined);
                     expect(res.body.post.likes.length).to.equals(1);
-
-                    users[0] = res.body.post.usuario;
                     postAux = res.body.post;
                     done();
                 });
@@ -421,7 +420,7 @@ describe('UserTest: ', () => {
                     const postedBy: any = res.body.post.comments[0].postedBy;
                     expect(res).to.have.status(200);
                     expect(res.body.post).to.not.equals(undefined);
-                    expect(String(postedBy)).to.equals(String(users[0]))
+                    expect(String(postedBy)).to.equals(String(users[0]._id))
                     postAux = res.body.post;
                     done();
                 })
@@ -473,9 +472,8 @@ describe('UserTest: ', () => {
     describe('get posts User', () => {
         it('should return 10 first post', (done) => {
             chai.request(url)
-                .get(`/post/postUser/${users[0]}`)
+                .get(`/post/postUser/${users[0]._id}`)
                 .end(function (err: any, res: any) {
-                    console.log(`/post/postUser/${users[0]}`);
                     expect(res).to.have.status(200);
                     expect(res.body.ok).to.equals(true);
                     expect(res.body.posts.length).to.equals(10);
@@ -485,7 +483,7 @@ describe('UserTest: ', () => {
 
         it('should return an empty array', (done) => {
             chai.request(url)
-                .get(`/post/postUser/${users[0]}?pagina=10`)
+                .get(`/post/postUser/${users[0]._id}?pagina=10`)
                 .end(function (err: any, res: any) {
                     expect(res).to.have.status(200);
                     expect(res.body.ok).to.equals(true)
@@ -496,9 +494,90 @@ describe('UserTest: ', () => {
 
         it('should return an error invalid page', (done) => {
             chai.request(url)
-                .get(`/post/postUser/${users[0]}?pagina=-1`)
+                .get(`/post/postUser/${users[0]._id}?pagina=-1`)
                 .end(function (err: any, res: any) {
-                    // expect(res).to.have.status(400);
+                    expect(res).to.have.status(400);
+                    expect(res.body.ok).to.equals(false)
+                    done();
+                });
+        });
+
+    });
+
+    describe('get posts Users Following', () => {
+        it('Should add testing1 to testing0 following', (done) => {
+            chai.request(url)
+                .post(`/user/follow/${users[1]._id}`)
+                .set({ 'x-token': token })
+                .end(function (err: any, res: any) {
+                    const idFollower0 = res.body.usuarioToFollow.followers[0]._id;
+                    const idFollowing0 = res.body.usuario.following[0]._id
+                    expect(res).to.have.status(200);
+                    expect(res.body.ok).to.equals(true);
+                    expect(idFollowing0).to.equals(String(users[1]._id))
+                    expect(idFollower0).to.equals(String(users[0]._id))
+                    done()
+                });
+        })
+
+        it('should return 10 last post from user1', (done) => {
+            chai.request(url)
+                .get(`/post/postFollowing`)
+                .set({ 'x-token': token })
+                .end(function (err: any, res: any) {
+                    expect(res).to.have.status(200);
+                    expect(res.body.ok).to.equals(true);
+                    expect(res.body.posts.length).to.equals(10);
+                    done();
+                });
+        });
+
+        it('Should remove testing1 to testing0 following', (done) => {
+            chai.request(url)
+                .post(`/user/follow/${users[1]._id}`)
+                .set({ 'x-token': token })
+                .end(function (err: any, res: any) {
+                    expect(res).to.have.status(200);
+                    expect(res.body.ok).to.equals(true);
+                    expect(res.body.usuario.following.length).to.equals(0)
+                    expect(res.body.usuarioToFollow.followers.length).to.equals(0)
+                    done()
+                });
+        })
+
+        it('should return 10 last post from user0', (done) => {
+            chai.request(url)
+                .get(`/post/postFollowing`)
+                .set({ 'x-token': token })
+                .end(function (err: any, res: any) {
+                    expect(res).to.have.status(200);
+                    expect(res.body.ok).to.equals(true);
+                    expect(res.body.posts.length).to.equals(10);
+                    res.body.posts.forEach((post: any) => {
+                        expect(post.usuario._id).to.equals(String(users[0]._id));
+                    });
+                    done();
+                });
+        });
+
+        it('should return an empty array', (done) => {
+            chai.request(url)
+                .get(`/post/postFollowing?pagina=10`)
+                .set({ 'x-token': token })
+                .end(function (err: any, res: any) {
+                    expect(res).to.have.status(200);
+                    expect(res.body.ok).to.equals(true)
+                    expect(res.body.posts.length).to.equals(0);
+                    done();
+                });
+        });
+
+        it('should return an error invalid page', (done) => {
+            chai.request(url)
+                .get(`/post/postFollowing?pagina=-1`)
+                .set({ 'x-token': token })
+                .end(function (err: any, res: any) {
+                    expect(res).to.have.status(400);
                     expect(res.body.ok).to.equals(false)
                     done();
                 });
