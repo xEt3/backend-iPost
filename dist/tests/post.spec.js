@@ -49,7 +49,6 @@ describe('UserTest: ', () => {
                         };
                         posts.push(post);
                     }
-                    yield new Promise(resolve => setTimeout(resolve, 500));
                     for (let i = 0; i < 21; i++) {
                         const post = {
                             menssaje: 'mensaje' + i + ' - testing1',
