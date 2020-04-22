@@ -47,7 +47,7 @@ userRoutes.post('/create', async (req: Request, res: Response) => {
     })
 })
 
-//Obtener user de forma paginada
+//Obtener users de forma paginada
 userRoutes.get('/', async (req: any, res: Response, next: NextFunction) => {
     try {
         let pagina = Number(req.query.pagina - 1) || 0;
@@ -133,17 +133,17 @@ userRoutes.post('/follow/:idUser', [verificaToken], async (req: any, res: Respon
     try {
         usuarioToFollow = await Usuario.findById(req.params.idUser).exec();
         usuario = await Usuario.findById(req.usuario._id).exec();
-    } catch (error) {}
+    } catch (error) { }
     if (!usuarioToFollow || !usuario) {
         return res.status(404).json({
             ok: false,
             message: 'No existe el usuario al que quieres seguir'
         })
     }
-    const indexUserToFollowInUserFollowing = usuario.following.findIndex((usr:any) => usr._id == String(usuarioToFollow._id));
+    const indexUserToFollowInUserFollowing = usuario.following.findIndex((usr: any) => usr._id == String(usuarioToFollow._id));
     if (indexUserToFollowInUserFollowing >= 0) {
         usuario.following.splice(indexUserToFollowInUserFollowing, 1);
-        const indexUserInUserToFollowFollower = usuarioToFollow.followers.findIndex((usr:any)=> usr._id == usuario._id);
+        const indexUserInUserToFollowFollower = usuarioToFollow.followers.findIndex((usr: any) => usr._id == usuario._id);
         usuarioToFollow.followers.splice(indexUserInUserToFollowFollower, 1);
     } else {
         usuario.following.push(usuarioToFollow._id);
@@ -172,40 +172,56 @@ userRoutes.post('/update', verificaToken, (req: any, res: Response) => {
         email: req.body.email || req.usuario.email,
         avatar: req.body.avatar || req.usuario.avatar
     }
-    Usuario.findByIdAndUpdate(req.usuario._id, user, { new: true }, (err, userDB) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err
-            })
-        };
-        if (!userDB) {
-            return res.status(404).json({
-                ok: false,
-                mensaje: 'No existe un usuario con ese id'
+    try {
+        Usuario.findByIdAndUpdate(req.usuario._id, user, { new: true }, (err, userDB) => {
+            if (err) {
+                return res.status(400).json({
+                    ok: false,
+                    err
+                })
+            };
+            if (!userDB) {
+                return res.status(404).json({
+                    ok: false,
+                    mensaje: 'No existe un usuario con ese id'
+                });
+            }
+            const userToken = Token.getJwtToken({
+                _id: userDB.id,
+                nombre: userDB.nombre,
+                email: userDB.email,
+                avatar: userDB.avatar
             });
-        }
-        const userToken = Token.getJwtToken({
-            _id: userDB.id,
-            nombre: userDB.nombre,
-            email: userDB.email,
-            avatar: userDB.avatar
+            res.json({
+                ok: true,
+                token: userToken,
+                user: userDB
+            });
         });
-        res.json({
-            ok: true,
-            token: userToken,
-            user: userDB
+    } catch (error) {
+        return res.status(404).json({
+            ok: false,
+            mensaje: 'No existe un usuario con ese id'
         });
-    });
+    }
+
 });
 
 //get usuario from token
 userRoutes.get('/me', [verificaToken], async (req: any, res: Response) => {
     const usuario = await Usuario.findById(req.usuario._id).exec();
-    res.json({
-        ok: true,
-        usuario
-    });
+    if(usuario){
+        res.json({
+            ok: true,
+            usuario
+        });
+    }else{
+        res.status(400).json({
+            ok: false,
+            message:'usuario no encontrado'
+        });
+    }
+ 
 });
 
 export default userRoutes;

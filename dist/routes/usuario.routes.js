@@ -56,7 +56,7 @@ userRoutes.post('/create', (req, res) => __awaiter(this, void 0, void 0, functio
         });
     });
 }));
-//Obtener user de forma paginada
+//Obtener users de forma paginada
 userRoutes.get('/', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
     try {
         let pagina = Number(req.query.pagina - 1) || 0;
@@ -182,39 +182,55 @@ userRoutes.post('/update', autenticacion_1.verificaToken, (req, res) => {
         email: req.body.email || req.usuario.email,
         avatar: req.body.avatar || req.usuario.avatar
     };
-    usuario_model_1.Usuario.findByIdAndUpdate(req.usuario._id, user, { new: true }, (err, userDB) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err
+    try {
+        usuario_model_1.Usuario.findByIdAndUpdate(req.usuario._id, user, { new: true }, (err, userDB) => {
+            if (err) {
+                return res.status(400).json({
+                    ok: false,
+                    err
+                });
+            }
+            ;
+            if (!userDB) {
+                return res.status(404).json({
+                    ok: false,
+                    mensaje: 'No existe un usuario con ese id'
+                });
+            }
+            const userToken = token_1.Token.getJwtToken({
+                _id: userDB.id,
+                nombre: userDB.nombre,
+                email: userDB.email,
+                avatar: userDB.avatar
             });
-        }
-        ;
-        if (!userDB) {
-            return res.status(404).json({
-                ok: false,
-                mensaje: 'No existe un usuario con ese id'
+            res.json({
+                ok: true,
+                token: userToken,
+                user: userDB
             });
-        }
-        const userToken = token_1.Token.getJwtToken({
-            _id: userDB.id,
-            nombre: userDB.nombre,
-            email: userDB.email,
-            avatar: userDB.avatar
         });
-        res.json({
-            ok: true,
-            token: userToken,
-            user: userDB
+    }
+    catch (error) {
+        return res.status(404).json({
+            ok: false,
+            mensaje: 'No existe un usuario con ese id'
         });
-    });
+    }
 });
 //get usuario from token
 userRoutes.get('/me', [autenticacion_1.verificaToken], (req, res) => __awaiter(this, void 0, void 0, function* () {
     const usuario = yield usuario_model_1.Usuario.findById(req.usuario._id).exec();
-    res.json({
-        ok: true,
-        usuario
-    });
+    if (usuario) {
+        res.json({
+            ok: true,
+            usuario
+        });
+    }
+    else {
+        res.status(400).json({
+            ok: false,
+            message: 'usuario no encontrado'
+        });
+    }
 }));
 exports.default = userRoutes;
