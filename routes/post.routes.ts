@@ -304,13 +304,13 @@ postRoutes.post('/like/:idPost', [verificaToken], async (req: any, res: Response
     const idPost = req.params.idPost
     let post: any;
     try {
-        post = await Post.findById(idPost).exec();
+        post = await Post.findById(idPost).populate('usuario', '-password').exec();
     } catch (error) {
 
     }
     if (post) {
         let existeLike = false;
-        post.likes.forEach(like => {
+        post.likes.forEach((like:any) => {
             if (like.likedBy == idUsuario) {
                 existeLike = true;
             }
@@ -322,7 +322,6 @@ postRoutes.post('/like/:idPost', [verificaToken], async (req: any, res: Response
         }
         Post.findByIdAndUpdate(idPost, post, { new: true }, async (err, postDB) => {
             if (postDB) {
-                await postDB.populate('usuario', '-password').execPopulate()
                 return res.json({
                     ok: true,
                     post
