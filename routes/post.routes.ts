@@ -311,14 +311,14 @@ postRoutes.post('/like/:idPost', [verificaToken], async (req: any, res: Response
     if (post) {
         let existeLike = false;
         post.likes.forEach((like:any) => {
-            if (like.likedBy == idUsuario) {
+            if (String(like._id) == idUsuario) {
                 existeLike = true;
             }
         })
         if (existeLike) {
             post.likes.splice(post.likes.indexOf(idUsuario), 1);
         } else {
-            post.likes.push({ likedBy: idUsuario });
+            post.likes.push(idUsuario);
         }
         Post.findByIdAndUpdate(idPost, post, { new: true }, async (err, postDB) => {
             if (postDB) {

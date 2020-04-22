@@ -304,14 +304,14 @@ postRoutes.post('/like/:idPost', [autenticacion_1.verificaToken], (req, res, nex
     const idPost = req.params.idPost;
     let post;
     try {
-        post = yield post_model_1.Post.findById(idPost).exec();
+        post = yield post_model_1.Post.findById(idPost).populate('usuario', '-password').exec();
     }
     catch (error) {
     }
     if (post) {
         let existeLike = false;
-        post.likes.forEach(like => {
-            if (like.likedBy == idUsuario) {
+        post.likes.forEach((like) => {
+            if (String(like._id) == idUsuario) {
                 existeLike = true;
             }
         });
@@ -319,11 +319,10 @@ postRoutes.post('/like/:idPost', [autenticacion_1.verificaToken], (req, res, nex
             post.likes.splice(post.likes.indexOf(idUsuario), 1);
         }
         else {
-            post.likes.push({ likedBy: idUsuario });
+            post.likes.push(idUsuario);
         }
         post_model_1.Post.findByIdAndUpdate(idPost, post, { new: true }, (err, postDB) => __awaiter(this, void 0, void 0, function* () {
             if (postDB) {
-                yield postDB.populate('usuario', '-password').execPopulate();
                 return res.json({
                     ok: true,
                     post
